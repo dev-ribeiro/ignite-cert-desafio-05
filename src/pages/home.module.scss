@@ -32,3 +32,13 @@
     gap: 0.5rem;
   }
 }
+
+.loadMorePosts {
+  all: unset;
+  margin-top: 4rem;
+  cursor: pointer;
+
+  span {
+    color: $highlight;
+  }
+}

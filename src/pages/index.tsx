@@ -3,7 +3,6 @@ import { GetStaticProps } from 'next';
 import { useState } from 'react';
 import Link from 'next/link';
 import { FiCalendar, FiUser } from 'react-icons/fi'
-import { RichText } from 'prismic-dom'
 import { getPrismicClient } from '../services/prismic';
 import styles from './home.module.scss';
 import { DefaultLayout } from '../layouts/DefaultLayout';
@@ -32,6 +31,31 @@ interface HomeProps {
 export default function Home({ postsPagination }: HomeProps): JSX.Element {
   const [posts, setPosts] = useState<Post[]>(postsPagination.results ?? []);
   const [nextPage, setNextPage] = useState<string | null>(postsPagination.next_page ?? null);
+  const [showLoadMoreButton, setShowLoadMoreButton] = useState(() => {
+    if (nextPage === null) {
+      return false;
+    }
+
+    return true;
+  });
+
+  const handleLoadMorePosts = async (): Promise<void> => {
+    if (nextPage !== null) {
+      try {
+        const response = await fetch(nextPage);
+        const newPage = await response.json();
+
+        setNextPage(newPage.next_page);
+        setPosts(prevState => {
+          return [...prevState, ...newPage.results];
+        });
+      } catch (error) {
+        setShowLoadMoreButton(false);
+      }
+    }
+
+    setShowLoadMoreButton(false);
+  };
 
   return (
     <DefaultLayout>
@@ -45,7 +69,7 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
               <div className={styles.iconWrapper}>
                 <div>
                   <FiCalendar color="#BBBBBB" size={20} />
-                  <span>{post.first_publication_date}</span>
+                  <span>{formatDate(post.first_publication_date)}</span>
                 </div>
                 <div>
                   <FiUser color="#BBBBBB" size={20} />
@@ -55,6 +79,15 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
             </section>
           </Link>
         ))}
+        {showLoadMoreButton && (
+          <button
+            type='button'
+            className={styles.loadMorePosts}
+            onClick={handleLoadMorePosts}
+          >
+            <span>Carregar mais posts</span>
+          </button>
+        )}
       </div>
     </DefaultLayout>
   );
@@ -67,18 +100,11 @@ export const getStaticProps: GetStaticProps = async () => {
     pageSize: 1
   });
 
-  const posts = postsResponse.results.map(post => {
-    return {
-      ...post,
-      first_publication_date: formatDate(post.first_publication_date),
-    };
-  });
-
   return {
     props: {
       postsPagination: {
         next_page: postsResponse.next_page,
-        results: posts
+        results: postsResponse.results
       },
     },
   };
