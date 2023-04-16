@@ -1,7 +1,29 @@
+@import "tokens.scss";
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-// TODO
+body {
+  background-color: $background;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: $heading;
+  font-family: $font-inter;
+  font-weight: 700;
+}
+
+p,
+span {
+  color: $body;
+  font-family: $font-inter;
+  font-weight: 400;
+}
